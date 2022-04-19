@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  quackmefrontend:
+    build:
+      context: Frontend
+      dockerfile: Dockerfile
+    image: quackmefrontend_local
+    ports:
+      - 4200:4200
+  quackmebackend:
+    build:
+      context: Backend
+      dockerfile: Dockerfile
+    image: quackmebackend_local
+    volumes:
+      - ./data:/root/out/output
+    ports:
+      - 8080:8080
