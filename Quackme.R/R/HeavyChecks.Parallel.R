@@ -338,7 +338,7 @@ if (nrow(error.df) <= 0)
 }
 cat(paste0('[', Sys.time(), ']I|  KO XML file created: ', ko.xml.filename), file = log.file, sep="\n")
 
-write.table(df.flags, "d:\\Flags.Heavy.df", sep="\t", quote = FALSE, row.names = FALSE)
+# write.table(df.flags, "d:\\Flags.Heavy.df", sep="\t", quote = FALSE, row.names = FALSE)
 
 # update flags with the error's level
 if (nrow(error.df) > 0)
