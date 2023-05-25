@@ -1854,7 +1854,7 @@ Aggregation.GlobalRadiation <- function(station.data, hourly.flags, current.date
           if (!is.na(Measured.Sunshine))
           {
             # retrieve the Angstrom Radiation
-            AngstromPrescott.Radiation <- as.double(day.obs[1, "APRAD"]) / 1000-0
+            AngstromPrescott.Radiation <- as.double(day.obs[1, "APRAD"]) / 1000.0
             if (!is.na(AngstromPrescott.Radiation))
             {
               Global.Radiation <- AngstromPrescott.Radiation

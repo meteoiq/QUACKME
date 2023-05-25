@@ -138,14 +138,23 @@ Station.HeavyChecks <- function (data.list, station.number, current.date)
 
           if (!exception.valid.tx2)
           {
-            paramsErr  = c("0", "30", dTT)
+            paramsErr  = c("0", "30", iTX, iTN)
             error.data <- HeavyChecks.GetError(station.data, "TX", "002", paramsErr)
             if (!is.null(error.data) & length(error.data) > 0)
             {
               #prop.status[1, "TX"] <- ifelse (prop.status[1, "TX"] != "W", error.data[[1]], prop.status[1, "TX"])
               new.errors[ nrow(new.errors) + 1, ] <- c(row$Station, row$DayTime, "TX", iTX, "002", error.data[[1]], error.data[[2]], error.data[[3]])
+              #station.flags <- HeavyChecks.ManageFlags(station.flags, station.number, current.date, "TX", error.data[[1]])
+            }
+
+            error.data <- HeavyChecks.GetError(station.data, "TN", "002", paramsErr)
+            if (!is.null(error.data) & length(error.data) > 0)
+            {
+              #prop.status[1, "TN"] <- ifelse (prop.status[1, "TN"] != "W", error.data[[1]], prop.status[1, "TN"])
+              new.errors[ nrow(new.errors) + 1, ] <- c(row$Station, row$DayTime, "TN", iTN, "002", error.data[[1]], error.data[[2]], error.data[[3]])
               #station.flags <- HeavyChecks.ManageFlags(station.flags, station.number, current.date, "TN", error.data[[1]])
             }
+
           }
           else {
             print (paste0("Exception rule remove error TX-002 for station ", station.number, "\n"))
@@ -299,14 +308,15 @@ Station.HeavyChecks <- function (data.list, station.number, current.date)
       }
 
       # RRR - Precipitation
+      # March 2023 / change the threshold from 1400 to 500 mm daily, and the error become a suspicious one, not wrong
       iRRR <- as.numeric(row$RRR)
-      if (!is.na(iRRR) & (iRRR < 0 | iRRR > 140))
+      if (!is.na(iRRR) & (iRRR < 0 | iRRR > 500))
       {
         exception.valid.rrr <- Check.HeavyChecks.Exceptions(exceptions.config, list("RRR", "001", station.data, station.coord))
 
         if (!exception.valid.rrr)
         {
-          paramsErr  = c("0", "140", iRRR)
+          paramsErr  = c("0", "500", iRRR)
           error.data <- HeavyChecks.GetError(station.data, "RRR", "001", paramsErr)
           if (!is.null(error.data) & length(error.data) > 0)
           {
@@ -319,6 +329,25 @@ Station.HeavyChecks <- function (data.list, station.number, current.date)
         }
       }
 
+      if (!is.na(iRRR) & iRRR > 200 & iRRR <= 500)
+      {
+        exception.valid.rrr <- Check.HeavyChecks.Exceptions(exceptions.config, list("RRR", "002", station.data, station.coord))
+
+        if (!exception.valid.rrr)
+        {
+          paramsErr  = c("200", "500", iRRR)
+          error.data <- HeavyChecks.GetError(station.data, "RRR", "003", paramsErr)
+          if (!is.null(error.data) & length(error.data) > 0)
+          {
+            #prop.status[1, "RRR"] <- error.data[[1]]
+            new.errors[ nrow(new.errors) + 1, ] <- c(row$Station, row$DayTime, "RRR", iRRR, "003", error.data[[1]], error.data[[2]], error.data[[3]])
+            #station.flags <- HeavyChecks.ManageFlags(station.flags, station.number, current.date, "RRR", error.data[[1]])
+          }
+        } else {
+          print (paste0("Exception rule remove error RRR-002 for station ", station.number, "\n"))
+        }
+      }
+
       # Precipitation & Cloud Cover
       if (!is.na(iRRR) & iRRR >0 & !is.na(iN) & iN == 0)
       {
@@ -326,7 +355,7 @@ Station.HeavyChecks <- function (data.list, station.number, current.date)
 
         if (!exception.valid.n2)
         {
-          paramsErr  = c("0", "0", iRRR, iN)
+          paramsErr  = c("0", "0", iRRR)
           error.data <- HeavyChecks.GetError(station.data, "N", "002", paramsErr)
           if (!is.null(error.data) & length(error.data) > 0)
           {
@@ -334,8 +363,18 @@ Station.HeavyChecks <- function (data.list, station.number, current.date)
             new.errors[ nrow(new.errors) + 1, ] <- c(row$Station, row$DayTime, "N", iN, "002", error.data[[1]], error.data[[2]], error.data[[3]])
             #station.flags <- HeavyChecks.ManageFlags(station.flags, station.number, current.date, "N", error.data[[1]])
           }
+
+          paramsErr  = c("0", "0", iRRR)
+          error.data <- HeavyChecks.GetError(station.data, "RRR", "002", paramsErr)
+          if (!is.null(error.data) & length(error.data) > 0)
+          {
+            #prop.status[1, "RRR"] <- ifelse (prop.status[1, "RRR"] != "W", error.data[[1]], prop.status[1, "RRR"])
+            new.errors[ nrow(new.errors) + 1, ] <- c(row$Station, row$DayTime, "RRR", iRRR, "002", error.data[[1]], error.data[[2]], error.data[[3]])
+            #station.flags <- HeavyChecks.ManageFlags(station.flags, station.number, current.date, "RRR", error.data[[1]])
+          }
+
         } else {
-          print (paste0("Exception rule remove error N-002 for station ", station.number, "\n"))
+          print (paste0("Exception rule remove error N-002, RRR-002 for station ", station.number, "\n"))
         }
       }
 
