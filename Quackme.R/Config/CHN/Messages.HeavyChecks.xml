@@ -12,7 +12,7 @@
 		<Property>N</Property>
 		<Code>002</Code>
 		<Values>RRR</Values>
-		<Text>Cloud cover EQUAL to #0# and precipitation GREATER than #1# (#Code# RRR #2#) </Text>
+		<Text>Cloud cover EQUAL to #0# and precipitation GREATER than #1# (RRR=#2# mm) </Text>
 		<Level>S</Level>
 	</Message>	
 	
@@ -59,6 +59,22 @@
 		<Text>Minimum temperature outside of interval #0# - #1# Celsius degrees (#Code# #2# Celsius degrees)</Text>
 		<Level>W</Level>
 	</Message>
+	
+	<Message>
+		<Property>TN</Property>
+		<Values>TX</Values>
+		<Code>002</Code>
+		<Text>Difference between maximum and minimum temperature outside of interval #0# - #1# Celsius degrees (TX=#2# C, TN=#3# C)</Text>
+		<Level>W</Level>
+	</Message>
+
+	<Message>
+		<Property>TN</Property>
+		<Values>TN,TX</Values>
+		<Code>003</Code>
+		<Text>Minimum temperature (#0# C) greater than maximum temperature (#1# C)</Text>
+		<Level>S</Level>
+	</Message>
 
 	<Message>
 		<Property>TX</Property>
@@ -71,8 +87,16 @@
 		<Property>TX</Property>
 		<Values>TN</Values>
 		<Code>002</Code>
-		<Text>Difference between maximum and minimum temperature outside of interval #0# - #1# Celsius degrees (Temp. Diff #2# Celsius degrees)</Text>
+		<Text>Difference between maximum and minimum temperature outside of interval #0# - #1# Celsius degrees (TX=#2# C, TN=#3# C)</Text>
 		<Level>W</Level>
+	</Message>
+
+	<Message>
+		<Property>TX</Property>
+		<Values>TN,TX</Values>
+		<Code>003</Code>
+		<Text>Minimum temperature (#0# C) greater than maximum temperature (#1# c)</Text>
+		<Level>S</Level>
 	</Message>
 
 	<Message>
@@ -94,8 +118,24 @@
 		<Code>001</Code>
 		<Text>Precipitation outside of interval #0# - #1# mm (#Code# #2# mm)</Text>
 		<Level>W</Level>
-	</Message>
+	</Message>	
 	
+	<Message>
+		<Property>RRR</Property>
+		<Code>002</Code>
+		<Values>RRR</Values>
+		<Text>Cloud cover EQUAL to #0# and precipitation GREATER than #1# (RRR=#2# mm) </Text>
+		<Level>S</Level>
+	</Message>
+
+	<Message>
+		<Property>RRR</Property>
+		<Code>003</Code>
+		<Values>RRR</Values>
+		<Text>Precipitation inside of interval #0# - #1# mm (#Code# #2# mm) </Text>
+		<Level>S</Level>
+	</Message>
+
 	<Message>
 		<Property>TT06</Property>
 		<Code>001</Code>
@@ -192,6 +232,13 @@
 		<Values>TN, TX</Values>
 		<Code>001</Code>
 		<Text>Snow value not allowed (#Code# (#0#+#1#)/2 = #2# > #3#</Text>
+		<Level>W</Level>
+	</Message>
+
+	<Message>
+		<Property>VIS</Property>
+		<Code>001</Code>
+		<Text>Visibility outside of interval (#0#-#1#) km (VISIBILITY=#2#)</Text>
 		<Level>W</Level>
 	</Message>
 
