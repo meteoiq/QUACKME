@@ -18,6 +18,7 @@ library(suncalc)
 rm(list=objects())
 
 # get the source path to know from which path to include sources
+# debug -- currentPath <- "C:/dev/iacopo_work/Quackme/quackme/Quackme/R/"
 currentPath <- paste0(getwd() , '/')
 print (currentPath)
 
@@ -41,6 +42,7 @@ options <- Aggregation.Command.Parse()
 # define the level
 checks.level <- 'Aggregation'
 
+# debug -- options <- readRDS("E:/iacopo_work/Quackme/quackme22022024data/testnov2024/cmdoptionsaggr.rds")
 # create the log file and log the input options
 log.file <- file( paste0(options[1, ]$LogPath, checks.level, format(Sys.time(), "%Y%m%d%H%M"), '.log'), open="a")
 Log.Options (options, log.file)
@@ -268,49 +270,67 @@ colnames(data.df) <- agg.columns
 flags.df <- as.data.frame(matrix(nrow = 0,ncol = 4))
 colnames(flags.df) <- c("Station", "DayTime", "Property", "Flags")
 
-# manage all answers
-for (i in 1:length(data.list))
-{
-  # manage the real data data.frame
-  tryCatch(
-    {
-      l.data.df <- as.data.frame(data.list[[i]][[1]])
-      if (nrow(l.data.df) > 0)
-      {
-        data.df <- rbind (data.df, as.data.frame(data.list[[i]][[1]]))
-      }
-    },error = function (err)
-    {
-      print (paste0('Data - Error : ', i, err))
-      return (NULL)
-    }
-    ,warning = function (warn)
-    {
-      print (paste0('Data - Warning: ', i, warn))
-      return (NULL)
-    }
-  )
 
-  # manage the flags data.frame
-  tryCatch(
-    {
-      l.flags.df <- as.data.frame(data.list[[i]][[2]])
-      if (nrow(l.flags.df) > 0)
-      {
-        flags.df <- rbind(flags.df, l.flags.df)
-      }
-    },error = function (err)
-    {
-      print (paste0('Flags - Error : ', i, err))
-      return (NULL)
-    }
-    ,warning = function (warn)
-    {
-      print (paste0('Flags - Warning: ', i, warn))
-      return (NULL)
-    }
-  )
-}
+# manage all answers
+tryCatch(
+  {
+    data.df <- as.data.frame(data.table::rbindlist(lapply(data.list,function(x) { if (is.data.frame(x[[1]]))
+      return (x[[1]])
+    })))
+    # data.df <- dplyr::bind_rows(lapply(data.list,function(x)
+    # {
+    #   if (nrow(x[[1]]) > 0)
+    #   {
+    #     x[[1]]
+    #   }
+    # }))
+    # if (nrow(data.df) == 0)
+    # {
+    #   data.df <- data.list[[1]][[1]]
+    #   data.df[] <- NA
+    # }
+  },
+  error = function (err)
+  {
+    print (paste0('Data - Error : ', err))
+    return (NULL)
+  },
+  warning = function (warn)
+  {
+    print (paste0('Data - Warning: ', warn))
+    return (NULL)
+  }
+)
+
+# manage the flags data.frame
+tryCatch(
+  {
+    flags.df <- as.data.frame(data.table::rbindlist(lapply(data.list,function(x) { if (is.data.frame(x[[2]]))
+      return (x[[2]])
+    })))
+    # flags.df <- dplyr::bind_rows(lapply(data.list,function(x)
+    # {
+    #   if (nrow(x[[2]]) > 0)
+    #   {
+    #     x[[2]]
+    #   }
+    # }))
+    # if (nrow(flags.df) == 0)
+    # {
+    #   flags.df <- data.list[[1]][[2]]
+    #   flags.df[] <- NA
+    # }
+  },error = function (err)
+  {
+    print (paste0('Flags - Error : ', err))
+    return (NULL)
+  }
+  ,warning = function (warn)
+  {
+    print (paste0('Flags - Warning: ', warn))
+    return (NULL)
+  }
+)
 
 # check the final values for TMIN & TMAX
 tntx_indexes = which(!is.na(data.df$TN) & !is.na(data.df$TX) & as.numeric(data.df$TN) > as.numeric(data.df$TX))
@@ -318,6 +338,7 @@ tntx_indexes = which(!is.na(data.df$TN) & !is.na(data.df$TX) & as.numeric(data.d
 # manage the EUR region of interest
 if (length(tntx_indexes) > 0 & options[1, "RegionOfInterest"] == "EUR")
 {
+  print ( data.df[ tntx_indexes, c("Station", "DayTime", "TN", "TX")])
   cat(paste0('[', Sys.time(), ']I|  Found ', length(tntx_indexes), ' cases for TMIN > TMAX'), file = log.file, sep="\n")
 
   # calculates the dates for TN and TX intervals
@@ -365,18 +386,21 @@ if (length(tntx_indexes) > 0 & options[1, "RegionOfInterest"] == "EUR")
     data_tn <- station.data[ which(strptime(station.data$DayTime, "%Y%m%d%H") >= date_19UTC_pd &
                                    strptime(station.data$DayTime, "%Y%m%d%H") <= date_18UTC_cd), ]
     calculate_tn <- length( which(!is.na(data_tn[, "TT"])) ) / 24.0
-    
+    print (data_tn[, c("Station", "DayTime", "TT")])
     new_tn <- NA
     if (calculate_tn >= 0.8) {
-      new_tn = min(data_tn[, "TT"], na.rm = TRUE)      
+      new_tn = min(data_tn[, "TT"], na.rm = TRUE)
+      print (paste0('New TN :', new_tn, ' Old TN :', data.df[station.index, "TN"]))
       if (new_tn >= as.numeric(data.df[station.index, "TN"])) { new_tn = NA }
     } else {
       #check for 3 hours values
       data_tn <- station.data[ which(station.data$DayTime %in% h3_tn_times), ]
+      print (data_tn[, c("Station", "DayTime", "TT")])
       calculate_tn <- length( which(!is.na(data_tn[, "TT"]))) / 8.0
       if (calculate_tn >= 0.8)
       {
         new_tn = min(data_tn[, "TT"], na.rm = TRUE)
+        print (paste0('New TN :', new_tn, ' Old TN :', data.df[station.index, "TN"]))
         if (new_tn >= as.numeric(data.df[station.index, "TN"])) { new_tn = NA }
       }
     }
@@ -386,24 +410,29 @@ if (length(tntx_indexes) > 0 & options[1, "RegionOfInterest"] == "EUR")
     }
     else {
       cat(paste0('[', Sys.time(), ']I|  Station:', station.number, ', New TMIN value: ', new_tn, ' replacing the calculated TMIN: ', data.df[ station.index, "TN"]), file = log.file, sep="\n")
+      print (paste0('BEfore : ', data.df[ station.index, "TN"]))
       data.df[ station.index, "TN"] = new_tn
+      print (paste0('AFter : ', data.df[ station.index, "TN"]))
     }
 
     data_tx <- station.data[ which(strptime(station.data$DayTime, "%Y%m%d%H") >= date_07UTC_cd &
                                      strptime(station.data$DayTime, "%Y%m%d%H") <= date_06UTC_nd), ]
+    print (data_tx[, c("Station", "DayTime", "TT")])
     calculate_tx <- length( which(!is.na(data_tn[, "TT"])) ) / 24.0
-	
     new_tx <- NA
     if (calculate_tx >= 0.8) {
       new_tx = max(data_tx[, "TT"], na.rm=TRUE)
+      print (paste0('New TX :', new_tx, ' Old TN :', data.df[station.index, "TX"]))
       if (new_tx <= as.numeric(data.df[station.index, "TX"])) { new_tx = NA }
     }
     else {
       data_tx <- station.data[ which(station.data$DayTime %in% h3_tx_times), ]
+      print (data_tx[, c("Station", "DayTime", "TT")])
       calculate_tx <- length( which(!is.na(data_tx[, "TT"]))) / 8.0
       if (calculate_tx >= 0.8)
       {
         new_tx = max(data_tx[, "TT"], na.rm=TRUE)
+        print (paste0('New TX :', new_tx, ' Old TN :', data.df[station.index, "TX"]))
         if (new_tx <= as.numeric(data.df[station.index, "TX"])) { new_tx = NA }
       }
     }
@@ -417,6 +446,8 @@ if (length(tntx_indexes) > 0 & options[1, "RegionOfInterest"] == "EUR")
       cat(paste0('[', Sys.time(), ']W| Cannot recalculate the TMAX for station ', station.number ), file = log.file, sep="\n")
     }
   }
+
+  print ( data.df[ tntx_indexes, c("Station", "DayTime", "TN", "TX")])
 }
 
 # Manage DAT file for current date

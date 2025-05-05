@@ -227,70 +227,98 @@ colnames(error.df) <- c('Station', 'DayTime', 'Property', 'Value', 'Code', 'Leve
 #colnames(flags.df) <- c("Station", "DayTime", "Property", "Flags")
 
 # manage all answers
-for (i in 1:length(data.list))
-{
-  # manage the real data data.frame
-  tryCatch(
-    {
-      l.data.df <- as.data.frame(data.list[[i]][[1]])
-      if (nrow(l.data.df) > 0)
-      {
-        data.df <- rbind (data.df, as.data.frame(data.list[[i]][[1]]))
-      }
-    },error = function (err)
-    {
-      print (paste0('Data - Error : ', i, err))
-      return (NULL)
-    }
-    ,warning = function (warn)
-    {
-      print (paste0('Data - Warning: ', i, warn))
-      return (NULL)
-    }
-  )
-
-  # manage the error data.frame
-  tryCatch(
-    {
-      l.error.df <- as.data.frame(data.list[[i]][[2]])
-      if (nrow(l.error.df) > 0)
-      {
-        error.df <- rbind(error.df, l.error.df)
-      }
-    },error = function (err)
-    {
-      print (paste0('Error - Error : ', i, err))
-      return (NULL)
-    }
-    ,warning = function (warn)
-    {
-      print (paste0('Error - Warning: ', i, warn))
-      return (NULL)
-    }
-  )
-
-  # manage the flags data.frame
-  if (FALSE)
+tryCatch(
   {
+    data.df <- as.data.frame(data.table::rbindlist(lapply(data.list,function(x) { if (is.data.frame(x[[1]]))
+      return (x[[1]])
+    })))
+    # data.df <- dplyr::bind_rows(lapply(data.list,function(x)
+    # {
+    #   if (nrow(x[[1]]) > 0)
+    #   {
+    #     x[[1]]
+    #   }
+    # }))
+    # if (nrow(data.df) == 0)
+    # {
+    #   data.df <- data.list[[1]][[1]]
+    #   data.df[] <- NA
+    # }
+  },
+  error = function (err)
+  {
+    print (paste0('Data - Error : ', err))
+    return (NULL)
+  },
+  warning = function (warn)
+  {
+    print (paste0('Data - Warning: ', warn))
+    return (NULL)
+  }
+)
+
+# manage the error data.frame
+tryCatch(
+  {
+    error.df <- as.data.frame(data.table::rbindlist(lapply(data.list,function(x) { if (is.data.frame(x[[2]]))
+      return (x[[2]])
+    })))
+    # error.df <- dplyr::bind_rows(lapply(data.list,function(x)
+    # {
+    #   if (nrow(x[[2]]) > 0)
+    #   {
+    #     x[[2]]
+    #   }
+    # }))
+    # if (nrow(error.df) == 0)
+    # {
+    #   error.df <- data.list[[1]][[2]]
+    #   error.df[] <- NA
+    # }
+  },
+  error = function (err)
+  {
+    print (paste0('Error - Error : ', err))
+    return (NULL)
+  }
+  ,warning = function (warn)
+  {
+    print (paste0('Error - Warning: ', warn))
+    return (NULL)
+  }
+)
+
+if (FALSE)
+{
+  # manage the flags data.frame
   tryCatch(
     {
-      l.flags.df <- as.data.frame(data.list[[i]][[3]])
-      if (nrow(l.flags.df) > 0)
-      {
-        flags.df <- rbind(flags.df, l.flags.df)
-      }
+      flags.df <- as.data.frame(data.table::rbindlist(lapply(data.list,function(x) { if (is.data.frame(x[[3]]))
+        return (x[[3]])
+      })))
+      # flags.df <- dplyr::bind_rows(lapply(data.list,function(x)
+      # {
+      #   if (nrow(x[[3]]) > 0)
+      #   {
+      #     x[[3]]
+      #   }
+      # }))
+      # if (nrow(flags.df) == 0)
+      # {
+      #   flags.df <- data.list[[1]][[3]]
+      #   flags.df[] <- NA
+      # }
     },error = function (err)
     {
-      print (paste0('Flags - Error : ', i, err))
+      print (paste0('Flags - Error : ', err))
       return (NULL)
     }
     ,warning = function (warn)
     {
-      print (paste0('Flags - Warning: ', i, warn))
+      print (paste0('Flags - Warning: ', warn))
       return (NULL)
     }
   )
-  }
 }
 
 #write.table(error.df, file ="d:\\HeavyErrors.df", sep="\t", quote = FALSE, row.names = FALSE )
@@ -338,7 +366,7 @@ if (nrow(error.df) <= 0)
 }
 cat(paste0('[', Sys.time(), ']I|  KO XML file created: ', ko.xml.filename), file = log.file, sep="\n")
 
-# write.table(df.flags, "d:\\Flags.Heavy.df", sep="\t", quote = FALSE, row.names = FALSE)
+write.table(df.flags, "d:\\Flags.Heavy.df", sep="\t", quote = FALSE, row.names = FALSE)
 
 # update flags with the error's level
 if (nrow(error.df) > 0)

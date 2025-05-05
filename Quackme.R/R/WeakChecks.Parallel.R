@@ -1,3 +1,4 @@
+
 #*********************************************************
 #             Main Workflow of Weak Checks
 #*********************************************************
@@ -13,6 +14,7 @@ library(stringr)
 rm(list=objects())
 
 # get the source path to know from which path to include sources
+# debug -- currentPath <- "C:/dev/iacopo_work/Quackme/quackme/Quackme/R/"
 currentPath <- paste0(getwd() , '/')
 print (currentPath)
 
@@ -29,6 +31,7 @@ source( paste0(currentPath, "OptionParsing.R"))
 Sys.setenv(TZ = "UTC")
 
 # parse the command line options
+# debug -- options <- readRDS("E:/iacopo_work/Quackme/quackme22022024data/testnov2024/cmdoptionsweak.rds")
 options <- WeakChecks.Command.Parse()
 
 # define the level
@@ -122,7 +125,7 @@ if (!is.na(options[1, "MergeInput"]))
     input.data <- rbind(input.data, df.hist)
 
     # sort data for Station and DayTime
-    input.data <- input.data[ order( input.data[, "Station"], input.data["DayTime"] ), ]
+    input.data <- input.data[ order( input.data$Station, input.data$DayTime ), ]
 
     # write.table(input.data, paste0(input.File.Name, "1"), sep="\t",row.names=FALSE, col.names=TRUE, quote=FALSE)
     cat(paste0('[', Sys.time(), ']I| History data append to the input data.'), file = log.file, sep="\n")
@@ -165,6 +168,7 @@ if (!is.na(options[1, "HistoryPath"]))
 {
   hist.flags.filename <- paste0(options[1, "HistoryPath"], 'H.Flags.', as.character(options[1, "ReferenceDate"]), ".hist")
   if (file.exists(hist.flags.filename)) {
+    #input.flags <- read.table(hist.flags.filename, header=TRUE, stringsAsFactors = FALSE, colClasses = c("character","character","character","character"))
     input.flags <- read.table(hist.flags.filename, header=TRUE, stringsAsFactors = FALSE)
   }
 }
@@ -345,69 +349,101 @@ colnames(error.df) <- c("Station", "DayTime", "Property", "Value", "Code", "Leve
 flags.df <- as.data.frame(matrix(nrow = 0,ncol = 4))
 colnames(flags.df) <- c("Station", "DayTime", "Property", "Flags")
 
+cat(paste0('[', Sys.time(), ']I|  before aggregate cluster results.'), file = log.file, sep="\n")
+
 # manage all answers
-for (i in 1:length(data.list))
-{
-  # manage the real data data.frame
-  tryCatch(
-    {
-      l.data.df <- as.data.frame(data.list[[i]][[1]])
-      if (nrow(l.data.df) > 0)
-      {
-        data.df <- rbind (data.df, as.data.frame(data.list[[i]][[1]]))
-      }
-    },error = function (err)
-    {
-      print (paste0('Data - Error : ', i, err))
-      return (NULL)
-    }
-    ,warning = function (warn)
-    {
-      print (paste0('Data - Warning: ', i, warn))
-      return (NULL)
-    }
-  )
+tryCatch(
+  {
+    data.df <- as.data.frame(data.table::rbindlist(lapply(data.list,function(x) { if (is.data.frame(x[[1]]))
+      return (x[[1]])
+    })))
+    # data.df <- dplyr::bind_rows(lapply(data.list,function(x)
+    #                                             {
+    #                                               if (nrow(x[[1]]) > 0)
+    #                                               {
+    #                                                 x[[1]]
+    #                                               }
+    #                                             }))
+    # if (nrow(data.df) == 0)
+    # {
+    #   data.df <- data.list[[1]][[1]]
+    #   data.df[] <- NA
+    # }
+  },
+  error = function (err)
+  {
+    print (paste0('Data - Error : ', err))
+    return (NULL)
+  },
+  warning = function (warn)
+  {
+    print (paste0('Data - Warning: ', warn))
+    return (NULL)
+  }
+)
 
-  # manage the error data.frame
-  tryCatch(
-    {
-      l.error.df <- as.data.frame(data.list[[i]][[2]])
-      if (nrow(l.error.df) > 0)
-      {
-        error.df <- rbind(error.df, l.error.df)
-      }
-    },error = function (err)
-    {
-      print (paste0('Error - Error : ', i, err))
-      return (NULL)
-    }
-    ,warning = function (warn)
-    {
-      print (paste0('Error - Warning: ', i, warn))
-      return (NULL)
-    }
-  )
+# manage the error data.frame
+tryCatch(
+  {
+    error.df <- as.data.frame(data.table::rbindlist(lapply(data.list,function(x) { if (is.data.frame(x[[2]]))
+      return (x[[2]])
+    })))
+    # error.df <- dplyr::bind_rows(lapply(data.list,function(x)
+    #                                               {
+    #                                                 if (nrow(x[[2]]) > 0)
+    #                                                 {
+    #                                                   x[[2]]
+    #                                                 }
+    #                                               }))
+    # if (nrow(error.df) == 0)
+    # {
+    #   error.df <- data.list[[1]][[2]]
+    #   error.df[] <- NA
+    # }
+  },
+  error = function (err)
+  {
+    print (paste0('Error - Error : ', err))
+    return (NULL)
+  }
+  ,warning = function (warn)
+  {
+    print (paste0('Error - Warning: ', warn))
+    return (NULL)
+  }
+)
 
-  # manage the flags data.frame
-  tryCatch(
-    {
-      l.flags.df <- as.data.frame(data.list[[i]][[3]])
-      if (nrow(l.flags.df) > 0)
-      {
-        flags.df <- rbind(flags.df, l.flags.df)
-      }
-    },error = function (err)
-    {
-      print (paste0('Flags - Error : ', i, err))
-      return (NULL)
-    }
-    ,warning = function (warn)
-    {
-      print (paste0('Flags - Warning: ', i, warn))
-      return (NULL)
-    }
-  )
-}
+# manage the flags data.frame
+tryCatch(
+  {
+    flags.df <- as.data.frame(data.table::rbindlist(lapply(data.list,function(x) { if (is.data.frame(x[[3]]))
+      return (x[[3]])
+    })))
+    # flags.df <- dplyr::bind_rows(lapply(data.list,function(x)
+    #                                       {
+    #                                         if (nrow(x[[3]]) > 0)
+    #                                         {
+    #                                           x[[3]]
+    #                                         }
+    #                                       }))
+    # if (nrow(flags.df) == 0)
+    # {
+    #   flags.df <- data.list[[1]][[3]]
+    #   flags.df[] <- NA
+    # }
+  },error = function (err)
+  {
+    print (paste0('Flags - Error : ', err))
+    return (NULL)
+  }
+  ,warning = function (warn)
+  {
+    print (paste0('Flags - Warning: ', warn))
+    return (NULL)
+  }
+)
+
+cat(paste0('[', Sys.time(), ']I|  after aggregate cluster results.'), file = log.file, sep="\n")
 
 for (d in 1:length(input.dates))
 {

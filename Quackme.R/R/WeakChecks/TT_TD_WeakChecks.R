@@ -402,8 +402,8 @@ WeakChecks.ChecksTemperatures <- function(data.list, current.date, old.errors, m
           }
           else {
             # verify again the TD and TT values only if one of them was interpolated
-            tt.interpolated <- nrow(subset(prop.flags, prop.flags$DayTime == row[1, "DayTime"] && prop.flags$Property == "TT" && str_detect('I', prop.flags$Flags))) > 0
-            td.interpolated <- nrow(subset(prop.flags, prop.flags$DayTime == row[1, "DayTime"] && prop.flags$Property == "TD" && str_detect('I', prop.flags$Flags))) > 0
+            tt.interpolated <- nrow(subset(prop.flags, prop.flags$DayTime == row[1, "DayTime"] & prop.flags$Property == "TT" & str_detect('I', prop.flags$Flags))) > 0
+            td.interpolated <- nrow(subset(prop.flags, prop.flags$DayTime == row[1, "DayTime"] & prop.flags$Property == "TD" & str_detect('I', prop.flags$Flags))) > 0
 
             print (paste0('TD.Interpolated:', td.interpolated, ', TT.Interpolated:', tt.interpolated, ', TT:', iTT, ', TD:', iTD))
             if (tt.interpolated == TRUE | td.interpolated == TRUE)

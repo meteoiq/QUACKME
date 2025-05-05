@@ -1,4 +1,5 @@
-FROM r-base:4.1.3
+FROM r-base:4.4.2
+# FROM r-base:4.1.3
 
 RUN apt-get update 
 # RUN apt-get install -y r-base
@@ -9,6 +10,8 @@ RUN apt-get update
 # RUN add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/'
 
 # RUN apt-get install -y r-base r-base-core r-recommended r-base-html r-doc-html 
+RUN apt-get update -y
+RUN apt-get install -y usrmerge
 RUN apt-get install -y xml2 libxml2-dev libcurl4-openssl-dev libnode-dev libproj-dev libgdal-dev libfontconfig1-dev
 
 RUN R -e "install.packages('RCurl',dependencies=TRUE, repos='http://cran.rstudio.com/')"
